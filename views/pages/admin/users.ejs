@@ -1,0 +1,306 @@
+<style type="text/css">
+    .dataTables_filter {
+        display: none;
+    }
+    div.panel-heading span.pull-right {
+        padding-left: 4px;
+    }
+    div.modal-body div.row:not(.no-padding-top) {
+        padding-top: 10px;
+    }
+    span[class="glyphicon"] {
+        display: none;
+    }
+</style>
+
+<h1 class="page-header">Admin >> Users</h1>
+<div class="row">
+    <div class="col-xs-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <font size="4">Users</font>
+                <span class="pull-right">
+                    <button id="btn-create-user" class="btn btn-sm btn-success">Create user</button>
+                </span>
+                <span class="pull-right">
+                    <input class="form-control input-sm" type="text" id="searchbox-users" placeholder="search..." />
+                </span>
+            </div>
+            <% if (error != 'null') { %>
+                <div class="panel-body">
+                    <div class="alert alert-danger" role="alert"><b>Database error</b>: <%= error %></div>
+                </div>
+            <% } else { %>
+                <table id="table-users" class="table table-striped" cellspacing="0" width="100%">
+                    <thead>
+                        <tr>
+                            <th>id</th>
+                            <th>Name</th>
+                            <th>Rank</th>
+                            <th class="text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% users.forEach(function(user) { %>
+                            <tr>
+                                <td><%= user.id %></td>
+                                <td><a href="<%= user.github %>" target="_blank"><%= user.name %></a></td>
+                                <td><%= user.rank %></td>
+                                <td class="text-right">
+                                    <button class="btn btn-xs btn-warning btn-update-user" data='{"id": <%= user.id %>}'>edit</button>
+                                    <button class="btn btn-xs btn-danger btn-delete-user" data='{"id": <%= user.id %>, "name": "<%= user.name %>"}'>delete</button>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </div>
+                </table>
+            <% } %>
+        </div>
+    </div>
+</div>
+
+<!-- Modals -->
+
+<!-- Create -->
+
+<div id="modal-create-user" class="modal fade">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                Create user
+            </div>
+            <div class="modal-body">
+                <form action="/api/users" id="form-create-user" class="form-horizontal fill-up separate-sections" method="POST">
+                    <input type="hidden" name="id" value="" />
+                    <div class="row no-padding-top">
+                        <div class="col-sm-8">
+                            <label for="name">Name</label><br />
+                            <input type="text" name="name" class="form-control" maxlength="32" value="" />
+                        </div>
+                        <div class="col-sm-4">
+                            <label for="rank">Rank</label><br />
+                            <select id="form-user-rank" name="rank" class="selectpicker form-control">
+                                <option value="admin">Admin</option>
+                                <option value="moderator">Moderator</option>
+                                <option value="technician">Technician</option>
+                                <option value="retired">Retired</option>
+                            </select>
+                        </div> 
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-4">
+                            <label for="twitter">Twitter</label><br />
+                            <input type="text" name="twitter" class="form-control" maxlength="32" value="">
+                        </div>
+                        <div class="col-sm-3">
+                            <label for="steam">Steam</label><br />
+                            <input type="text" name="steam" class="form-control" maxlength="32" value="">
+                        </div>
+                        <div class="col-sm-5">
+                            <label for="github">Github</label><br />
+                            <input type="text" name="github" class="form-control" maxlength="32" value="">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <label for="description">Description</label><br />
+                            <input type="text" name="description" class="form-control" maxlength="32" value="">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <label for="notes">notes</label><br />
+                            <textarea type="text" name="notes" class="form-control" rows="5"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <span class="pull-left output-result"></span>
+                <button class="btn btn-success" ajaxForm="form-create-user" value="Create" done="Created">Create</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- update -->
+
+<div id="modal-update-user" class="modal fade">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                Edit user
+            </div>
+            <div class="modal-body">
+                <form action="/api/users" id="form-update-user" class="form-horizontal fill-up separate-sections" method="PUT">
+                    <!-- Paste Here -->
+                </form>
+            </div>
+            <div class="modal-footer">
+                <span class="pull-left output-result"></span>
+                <button class="btn btn-warning" ajaxForm="form-update-user" value="Update" done="Updated">Update</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete -->
+
+<div id="modal-delete-user" class="modal fade">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                Delete a user
+            </div>
+            <div class="modal-body">
+                <h4>Are you sure?, you are gonna delete <span id="modal-user-name"></span></h4>
+                <p>If you click on delete this user will be completely removed from the database.</p>
+                <form action="/api/users" id="form-delete-user" method="delete">
+                    <input type="hidden" name="id" value="">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <span class="pull-left output-result"></span>
+                <button class="btn btn-danger" ajaxForm="form-delete-user" value="Delete" done="Deleted">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Custom JS -->
+
+<script type="text/javascript">
+
+    $('#form-update-user').html($('#form-create-user').html());
+
+    $(document).ready(function() {
+
+        var dataTableUsers = $('#table-users').DataTable({
+            "bLengthChange": false,
+            "bInfo": false,
+            "order": [[ 1, "asc" ]],
+            "iDisplayLength": 18, 
+            "processing": true,
+            "columnDefs": [
+                {
+                    "targets": [ 0 ],
+                    "visible": false
+                },
+                {
+                    "targets": [ -1 ],
+                    "searchable": false,
+                    "sortable": false
+                }
+            ]
+        });
+
+        $("#searchbox-users").on("keyup search input paste cut", function() {
+            dataTable.search(this.value).draw();
+        }); 
+
+        $("#table-users_paginate").addClass('pull-left').parent().parent().children().first().removeClass('col-sm-5').addClass('col-sm-4');
+    });
+
+    //--------------------------------------------------------------------------
+    //  Create
+    //--------------------------------------------------------------------------
+    
+    $('#btn-create-user').click(function () {
+        $('#modal-create-user').modal({
+            show: true
+        });
+    });
+
+    //--------------------------------------------------------------------------
+    //  update
+    //--------------------------------------------------------------------------
+
+    $('.btn-update-user').click(function () {
+
+        var data = $.parseJSON($(this).attr('data'));
+
+        // Request
+
+        $.ajax({
+            type: "GET",
+            dataType: "json",
+            url: "/api/users/" + data.id,
+            success: function(data) {
+
+                if (data.status === 1) {
+
+                    $('#form-update-user input[name="id"]').val(data.result.id);
+                    $('#form-update-user input[name="name"]').val(data.result.name);
+                    $('#form-update-user select[name="rank"]').selectpicker('val', data.result.rank).selectpicker('refresh');
+                    $('#form-update-user input[name="steam"]').val(data.result.steam);
+                    $('#form-update-user input[name="twitter"]').val(data.result.twitter);
+                    $('#form-update-user input[name="github"]').val(data.result.github);
+                    $('#form-update-user input[name="description"]').val(data.result.description);
+                    $('#form-update-user textarea[name="notes"]').val(data.result.notes);
+                }
+                else {
+                    $('#form-update-user').html('<div class="alert alert-danger"><b>Unable to load from the API: ' + data.reason + '</div><pre>' + JSON.stringify(data) + '</pre>');
+                }
+            }
+        });
+
+        // Deploy
+
+        $('#modal-update-user').modal({
+            show: true
+        });
+    });
+
+    //--------------------------------------------------------------------------
+    //  Delete
+    //--------------------------------------------------------------------------
+
+    $('.btn-delete-user').click(function () {
+
+        var data = $.parseJSON($(this).attr('data'));
+
+        $('#form-delete-user input[name="id"]').attr('value', data.id);
+        $('#modal-delete-user #modal-user-name').html(data.name);
+
+        $('#modal-delete-user').modal({
+            show: true
+        });
+    });
+
+    //--------------------------------------------------------------------------
+    //  Send any form with ajax
+    //--------------------------------------------------------------------------
+
+    $('button[ajaxForm]').click(function() {
+
+        var button = $(this);
+        var form = $('#' + button.attr('ajaxForm'));
+
+        $.ajax({
+            type: form.attr('method'),
+            dataType: "json",
+            url: form.attr('action'),
+            data: form.serialize(),
+            beforeSend: function() {
+                button.prop('disabled', true).html('Working...');
+            },
+            success: function(data) {
+                console.log(data);
+                if (data.status === 1) {
+                    button.prev('.output-result').html('user was ' + button.attr('done') + ' successfully').removeClass('text-danger').addClass('text-success').show().delay(3000).fadeOut().closest('div.modal.in').modal('toggle');
+
+                    location.reload();
+
+                }
+                button.html(button.attr('done')).delay(2000).prop('disabled', false).html(button.attr('value'));
+            },
+            error: function() {
+                button.prev('.output-result').html('api request failed').removeClass('text-success').addClass('text-danger').show();
+                button.html('Error');
+            }
+        });
+    });
+</script>
